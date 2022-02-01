@@ -1,0 +1,12 @@
+micronaut:
+  application:
+    name: fixSimulator
+netty:
+  default:
+    allocator:
+      max-order: 3
+kafka.bootstrap.servers: localhost:9092
+order:
+  post:
+    simulator-mode: true
+    execute: "1s"
