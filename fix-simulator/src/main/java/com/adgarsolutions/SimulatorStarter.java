@@ -9,6 +9,7 @@ import org.slf4j.LoggerFactory;
 import com.adgarsolutions.shared.model.Order;
 
 import javax.inject.Singleton;
+import java.math.BigDecimal;
 import java.util.UUID;
 
 @Singleton
@@ -34,7 +35,7 @@ public class SimulatorStarter {
     void postOrder() {
 
         if (enabledSimulationMode()) {
-            var o =  new Order(UUID.randomUUID().toString());
+            var o =  new Order(UUID.randomUUID().toString(), "AAPL", BigDecimal.valueOf(125.4), BigDecimal.valueOf(25.3), "Buy");
             LOG.info("Submitting order to Kafka: {}", o.getId());
             // Uncomment when make sure Kafka cluster is running: simulatorPublisher.sendOrder(o.getId(), o);
             // TODO: Will need to add service to check if cluster is up on startup
