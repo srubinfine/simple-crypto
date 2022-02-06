@@ -1,0 +1,7 @@
+micronaut:
+  application:
+    name: services
+netty:
+  default:
+    allocator:
+      max-order: 3
