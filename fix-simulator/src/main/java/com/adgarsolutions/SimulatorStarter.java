@@ -1,5 +1,6 @@
 package com.adgarsolutions;
 
+import com.adgarsolutions.services.interfaces.OrdersServiceKafkaSender;
 import io.micronaut.context.annotation.Value;
 import io.micronaut.context.event.StartupEvent;
 import io.micronaut.runtime.event.annotation.EventListener;
@@ -17,10 +18,10 @@ public class SimulatorStarter {
 
     private static final Logger LOG = LoggerFactory.getLogger(SimulatorStarter.class);
 
-    private final SimulatorPublisher simulatorPublisher;
+    private final OrdersServiceKafkaSender ordersServiceKafkaSender;
 
-    public SimulatorStarter(SimulatorPublisher simulatorPublisher) {
-        this.simulatorPublisher = simulatorPublisher;
+    public SimulatorStarter(OrdersServiceKafkaSender ordersServiceKafkaSender) {
+        this.ordersServiceKafkaSender = ordersServiceKafkaSender;
     }
 
     @Value("${order.post.simulator-mode}")
