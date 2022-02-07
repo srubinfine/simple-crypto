@@ -8,5 +8,5 @@ import io.micronaut.configuration.kafka.annotation.Topic;
 @KafkaClient
 public interface OrdersServiceKafkaSender {
     @Topic("order")
-    public void sendOrder(@KafkaKey String orderId, Order order);
+    void sendOrder(@KafkaKey String orderId, Order order);
 }
