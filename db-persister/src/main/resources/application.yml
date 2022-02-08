@@ -1,0 +1,14 @@
+micronaut:
+  application:
+    name: dbPersister
+datasources:
+  default:
+    url: jdbc:postgresql://localhost:5432/postgres
+    driverClassName: org.postgresql.Driver
+    username: postgres
+    password: ''
+netty:
+  default:
+    allocator:
+      max-order: 3
+kafka.bootstrap.servers: localhost:9092
