@@ -1,21 +1,25 @@
 package com.adgarsolutions.controllers;
 
 import com.adgarsolutions.services.orders.OrdersService;
+import com.adgarsolutions.shared.exception.InvalidAccountIdException;
+import com.adgarsolutions.shared.exception.InvalidNewOrderException;
+import com.adgarsolutions.shared.exception.NewOrderAlreadyHasIdException;
 import com.adgarsolutions.shared.health.HealthCheck;
 import com.adgarsolutions.shared.model.Order;
-import io.micronaut.http.annotation.Controller;
-import io.micronaut.http.annotation.Get;
-import io.micronaut.http.annotation.PathVariable;
+import io.micronaut.http.HttpResponse;
+import io.micronaut.http.annotation.*;
 import io.micronaut.security.annotation.Secured;
 import io.micronaut.security.rules.SecurityRule;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 @Controller("/orders")
 @Secured(SecurityRule.IS_ANONYMOUS) // TODO: REMOVE WHEN JWT implemented
@@ -37,12 +41,23 @@ public class OrderController {
     }
 
     @Get("/{accountId}/all")
-    @Operation(summary = "Creates a new bar object adding a decorated id and the current time",description = "Showcase of the creation of a dto")
-    @ApiResponse(responseCode = "201", description = "Bar object correctly created",content = @Content(mediaType = "application/json",schema = @Schema(type="BarDto")))
-    @ApiResponse(responseCode = "400", description = "Invalid id Supplied")
-    @ApiResponse(responseCode = "500", description = "Remote error, server is going nuts")    @Tag(name = "orders")
-    public Flux<Order> getAllOrdersForAccount(@PathVariable("accountId") String accountId) {
+    @Operation(summary = "Fetch all orders for account id",description = "Fetch all orders for account id")
+    @ApiResponse(responseCode = "400", description = "Invalid Account Id Supplied")
+    @ApiResponse(responseCode = "500", description = "Internal error")    @Tag(name = "orders")
+    public Flux<Order> getAllOrdersForAccount(@PathVariable("accountId") String accountId) throws InvalidAccountIdException {
         LOG.info("CTRL: Getting all orders for account ID {}", accountId);
         return ordersService.getAllOrdersForAccount(accountId);
+    }
+
+    @Post("/{accountId}/")
+    @Operation(summary = "Creates a new bar object adding a decorated id and the current time",description = "Showcase of the creation of a dto")
+    @ApiResponse(responseCode = "400", description = "Invalid Order Supplied")
+    @ApiResponse(responseCode = "403", description = "Unauthorized")
+    @ApiResponse(responseCode = "500", description = "Internal error") @Tag(name = "orders")
+    public Mono<Order> createOrder(@PathVariable("accountId") String accountId, @Body Order order)
+            throws InvalidAccountIdException, InvalidNewOrderException, NewOrderAlreadyHasIdException
+    {
+        LOG.info("CTRL: Create Order {} for account id {}", order, accountId);
+        return ordersService.createOrder(accountId, order);
     }
 }
