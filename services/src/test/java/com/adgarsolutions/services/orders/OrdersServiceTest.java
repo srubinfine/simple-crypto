@@ -5,7 +5,9 @@ import org.junit.jupiter.api.Test;
 import org.reactivestreams.Publisher;
 import org.reactivestreams.Subscriber;
 import org.reactivestreams.Subscription;
+import reactor.core.CoreSubscriber;
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.FluxSink;
 import reactor.util.function.Tuple2;
 import reactor.util.function.Tuple3;
 
@@ -21,25 +23,20 @@ import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-class FilePublisher implements Publisher<String> {
-
-    private final BufferedReader reader;
-
-    public FilePublisher(String fileName) {
-        this.reader = new BufferedReader(new InputStreamReader(ClassLoader.getSystemResourceAsStream(fileName)));
-    }
-
-    @Override
-    public void subscribe(Subscriber<? super String> s) {
-        String line = null;
-        try {
-            while (null != (line = this.reader.readLine())) {
-                s.onNext(line);
+class FilePublisher {
+    public static Flux<String> createFlux(String fileName) {
+        var reader = new BufferedReader(new InputStreamReader(ClassLoader.getSystemResourceAsStream(fileName)));
+        return Flux.create(s -> {
+            String line;
+            try {
+                while (null != (line = reader.readLine())) {
+                    s.next(line);
+                }
+                s.complete();
+            } catch (Exception ex) {
+                s.error(ex);
             }
-            s.onComplete();
-        } catch (Exception ex) {
-            s.onError(ex);
-        }
+        }, FluxSink.OverflowStrategy.BUFFER);
     }
 }
 
@@ -47,16 +44,32 @@ class OrdersServiceTest {
 
     @Test
     void getAllOrdersForAccount() {
-        Flux.from(new FilePublisher("test1.txt")).
-           map(OrdersServiceTest::mapToOrder).subscribe(System.out::println);
 
+        // NOTE:  there are 3 symbols in the file, but only 2 idx, so zip is going to generate ONLY 2 recs
+        Flux.just(1,2).zipWith(FilePublisher.createFlux("test1.txt"))
+                .map(OrdersServiceTest::mapToOrder1).subscribe(System.out::println);
+
+        // OR using static
+
+        Flux f1 = Flux.just(1,2,3,4,5);
+        Flux f2 = FilePublisher.createFlux("test1.txt");
+
+        // EITHER 2 LINES OR CAST Flux<Tuple2<String, Integer>> zipped = (Flux<Tuple2<String, Integer>>)Flux.zip(f2, f1);
+        // zipped.map(OrdersServiceTest::mapToOrder2).subscribe(System.out::println);
+        // NOTE: there are 3 symbols in the file, so zip is going to generate 3 recs, EVEN THOUGH there are 5 idxs
+        ((Flux<Tuple2<String, Integer>>)Flux.zip(f2, f1)).map(OrdersServiceTest::mapToOrder2).subscribe(System.out::println);
     }
+
 
     @Test
     void createOrder() {
     }
 
-    private static Order mapToOrder(String symbol) {
-       return new Order(UUID.randomUUID().toString(), symbol, BigDecimal.valueOf(125.4), BigDecimal.valueOf(20.1), "Buy");
+    private static Order mapToOrder1(Tuple2<Integer, String> tpl) {
+       return new Order(UUID.randomUUID().toString(), tpl.getT2(), BigDecimal.valueOf(125.4), BigDecimal.valueOf(tpl.getT1()), "Buy");
+    }
+
+    private static Order mapToOrder2(Tuple2<String, Integer> tpl) {
+        return new Order(UUID.randomUUID().toString(), tpl.getT1(), BigDecimal.valueOf(125.4), BigDecimal.valueOf(tpl.getT2()), "Buy");
     }
 }
