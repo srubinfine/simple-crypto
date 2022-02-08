@@ -14,7 +14,7 @@ import java.util.function.Function;
 class FilePublisher {
 
     public static Flux<String> createFluxFromFile(Function<String, BufferedReader> f, String fileNameOrPath) throws IOException {
-        var reader = new BufferedReader(new FileReader(new File(fileNameOrPath)));
+        var reader = new BufferedReader(new FileReader(fileNameOrPath));
         return Flux.create(s -> {
             String line;
             try {
