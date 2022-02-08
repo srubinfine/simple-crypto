@@ -44,3 +44,18 @@ services:
       kafka-topics --bootstrap-server kafka:29092 --list
       "
 
+  db:
+    image: postgres
+    restart: always
+    ports:
+      - '5432:5432'
+    environment:
+      POSTGRES_USER: root
+      POSTGRES_PASSWORD: changeme
+      POSTGRES_DB: mydb
+
+  adminer:
+    image: adminer
+    restart: always
+    ports:
+      - '8080:8080'
