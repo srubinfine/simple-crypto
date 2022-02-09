@@ -1,14 +1,29 @@
 micronaut:
   application:
     name: dbPersister
+  server:
+    host: localhost
+    port: 8083
 datasources:
   default:
-    url: jdbc:postgresql://localhost:5432/postgres
+    url: jdbc:postgresql://localhost:5432/mydb
     driverClassName: org.postgresql.Driver
-    username: postgres
-    password: ''
+    username: root
+    password: 'changeme'
+    schemas: smplc
+    default-schema: smplc
+kafka.bootstrap.servers: localhost:9092
 netty:
   default:
     allocator:
       max-order: 3
-kafka.bootstrap.servers: localhost:9092
+flyway:
+  datasources:
+    default:
+      enabled: true
+      clean-schema: false
+      url: ${PG_JDBC_URL:`jdbc:postgresql://localhost:5432/mydb`}
+      user: ${PG_USERNAME:root}
+      password: ${PG_PASSWORD:changeme}
+      schemas: smplc
+      default-schema: smplc
