@@ -4,14 +4,6 @@ micronaut:
   server:
     host: localhost
     port: 8083
-datasources:
-  default:
-    url: jdbc:postgresql://localhost:5432/mydb
-    driverClassName: org.postgresql.Driver
-    username: root
-    password: 'changeme'
-    schemas: smplc
-    default-schema: smplc
 kafka.bootstrap.servers: localhost:9092
 netty:
   default:
