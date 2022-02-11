@@ -23,7 +23,10 @@ public class DbPersister {
     @EventListener
     public void onStartup(BeanContextEvent beanContextEvent) throws Exception {
         if (beanContextEvent instanceof StartupEvent) {
-            // Nothing to do at the moment
+            this.asyncOrderRepository.findById("abc").subscribe(
+                ord -> System.out.println(ord.toString()),
+                err -> System.out.println(err.toString()),
+                () -> System.out.println("DONE RETRIEVING ORDER BY ID"));
         }
 
         if (beanContextEvent instanceof ShutdownEvent) {
