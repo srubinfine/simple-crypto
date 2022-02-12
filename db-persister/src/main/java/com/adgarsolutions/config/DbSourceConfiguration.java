@@ -11,6 +11,7 @@ public class DbSourceConfiguration {
     private String password;
     private String schemas;
     private String defaultSchema;
+    private Integer connections;
 
     public Boolean getEnabled() {
         return enabled;
@@ -68,6 +69,14 @@ public class DbSourceConfiguration {
         this.defaultSchema = defaultSchema;
     }
 
+    public Integer getConnections() {
+        return connections;
+    }
+
+    public void setConnections(Integer connections) {
+        this.connections = connections;
+    }
+
     @Override
     public String toString() {
         return "DbSourceConfiguration{" +
@@ -78,6 +87,9 @@ public class DbSourceConfiguration {
                 ", password='" + password + '\'' +
                 ", schemas='" + schemas + '\'' +
                 ", defaultSchema='" + defaultSchema + '\'' +
+                ", connections=" + connections +
                 '}';
     }
 }
+
+

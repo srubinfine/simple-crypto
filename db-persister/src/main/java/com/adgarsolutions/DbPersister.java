@@ -2,13 +2,13 @@ package com.adgarsolutions;
 
 import com.adgarsolutions.repository.AsyncOrderRepository;
 import io.micronaut.context.event.BeanContextEvent;
-import io.micronaut.context.event.ShutdownEvent;
 import io.micronaut.context.event.StartupEvent;
 import io.micronaut.runtime.event.annotation.EventListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Singleton;
+import java.util.Arrays;
 
 @Singleton
 public class DbPersister {
@@ -21,17 +21,19 @@ public class DbPersister {
     }
 
     @EventListener
-    public void onStartup(BeanContextEvent beanContextEvent) throws Exception {
+    public void onStartup(BeanContextEvent beanContextEvent) {
         if (beanContextEvent instanceof StartupEvent) {
-            this.asyncOrderRepository.findById("abc").subscribe(
-                ord -> System.out.println(ord.toString()),
-                err -> System.out.println(err.toString()),
-                () -> System.out.println("DONE RETRIEVING ORDER BY ID"));
-        }
 
-        if (beanContextEvent instanceof ShutdownEvent) {
-            if (this.asyncOrderRepository != null) {
-                this.asyncOrderRepository.close();
+            while (true) {
+                this.asyncOrderRepository.findAll(Arrays.asList("abc", "rmd")).subscribe(
+                        ord -> System.out.println(ord.toString()),
+                        err -> System.out.println(err.toString()),
+                        () -> System.out.println("DONE RETRIEVING ORDERS BY IDS"));
+
+                this.asyncOrderRepository.findById("abc").subscribe(
+                        ord -> System.out.println(ord.toString()),
+                        err -> System.out.println(err.toString()),
+                        () -> System.out.println("DONE RETRIEVING ORDER BY ID"));
             }
         }
     }

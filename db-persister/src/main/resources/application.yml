@@ -19,3 +19,4 @@ flyway:
       password: ${PG_PASSWORD:changeme}
       schemas: smplc
       default-schema: smplc
+      connections: 3
