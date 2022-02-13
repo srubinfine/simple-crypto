@@ -9,6 +9,8 @@
     <module>shared</module>
     <module>fix-simulator</module>
     <module>services</module>
+    <module>db-persister</module>
+    <module>new-order</module>
   </modules>
   <packaging>pom</packaging>
 
