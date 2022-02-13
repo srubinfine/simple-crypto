@@ -24,17 +24,15 @@ public class DbPersister {
     public void onStartup(BeanContextEvent beanContextEvent) {
         if (beanContextEvent instanceof StartupEvent) {
 
-            while (true) {
-                this.asyncOrderRepository.findAll(Arrays.asList("abc", "rmd")).subscribe(
-                        ord -> System.out.println(ord.toString()),
-                        err -> System.out.println(err.toString()),
-                        () -> System.out.println("DONE RETRIEVING ORDERS BY IDS"));
+            this.asyncOrderRepository.findAll(Arrays.asList("abc", "rmd")).subscribe(
+                    ord -> System.out.println(ord.toString()),
+                    err -> System.out.println(err.toString()),
+                    () -> System.out.println("DONE RETRIEVING ORDERS BY IDS"));
 
-                this.asyncOrderRepository.findById("abc").subscribe(
-                        ord -> System.out.println(ord.toString()),
-                        err -> System.out.println(err.toString()),
-                        () -> System.out.println("DONE RETRIEVING ORDER BY ID"));
-            }
+            this.asyncOrderRepository.findById("abc").subscribe(
+                    ord -> System.out.println(ord.toString()),
+                    err -> System.out.println(err.toString()),
+                    () -> System.out.println("DONE RETRIEVING ORDER BY ID"));
         }
     }
 }

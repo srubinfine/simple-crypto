@@ -17,9 +17,9 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Locale;
 
-public abstract class AsyncCrudRepository<T extends Identifiable<ID>, ID> {
+public abstract class AsyncRepository<T extends Identifiable<ID>, ID> {
 
-    private final static Logger LOG = LoggerFactory.getLogger(AsyncCrudRepository.class);
+    private final static Logger LOG = LoggerFactory.getLogger(AsyncRepository.class);
 
     private final DbContext dbContext;
     private RepositoryQueriesContainer repositoryQueriesContainer;
@@ -32,70 +32,29 @@ public abstract class AsyncCrudRepository<T extends Identifiable<ID>, ID> {
 
     private QueryBinderState queryBinderState = QueryBinderState.WAIT;
 
-
-    protected AsyncCrudRepository(DbContext dbContext) {
+    protected AsyncRepository(DbContext dbContext) {
 
         this.dbContext = dbContext;
 
-        var binders = this.getClass().getAnnotationsByType(QueryBinder.class);
-        if (binders == null || binders.length <= 0) {
-            throw new RuntimeException("QueryBinder annotation with a valid 'file' property must be defined on any Repository class");
-        }
-
-        var f = binders[0].file();
-        if (StringUtils.isEmpty(f)) {
-            throw new RuntimeException("QueryBinder annotation: file property must be overwritten");
-        }
-
-        try {
-            String fileName = (f.toUpperCase(Locale.ROOT).endsWith(".YML") || f.toUpperCase(Locale.ROOT).endsWith(".YAML"))
-                ? f : f + ".yml";
-            var url = this.getClass().getClassLoader().getResource(Path.of("db", "repository", fileName).toString());
-            if (url == null) {
-                throw new RuntimeException("QueryBinder annotation: " + fileName + "(.yml) or (.yaml) does not exist in resources/db/repository");
-            }
-            BufferedReader in = new BufferedReader(new InputStreamReader(url.openStream()));
-            repositoryQueriesContainer = new RepositoryQueriesContainer();
-            String nxt = null;
-            while (null != (nxt = in.readLine())) {
-                if (nxt.equalsIgnoreCase("CRUD:")) {
-                    queryBinderState = QueryBinderState.IN_CRUD;
-                }
-                else if (nxt.equalsIgnoreCase("STORED-PROCEDURES:")) {
-                    queryBinderState = QueryBinderState.IN_STORED_PROC;
-                } else if (nxt.endsWith(":")) {
-                    queryBinderState = QueryBinderState.WAIT;
-                } else {
-                    switch (queryBinderState) {
-                        case IN_CRUD:
-                            processCrud(nxt, repositoryQueriesContainer);
-                            break;
-                        case IN_STORED_PROC:
-                            processSp(nxt, repositoryQueriesContainer);
-                            break;
-                    }
-                }
-            }
-        } catch (Exception ex) {
-            throw new RuntimeException(ex);
-        }
+        configureQueryBinder();
     }
 
     protected abstract T getNextItemFromRecordSet(final ResultSet rs) throws SQLException;
 
-    public Mono<? extends T> save(@NonNull T entity) {
+    public Mono<ID> save(@NonNull T entity) {
         return null;
     }
 
-    public Mono<? extends T> update(@NonNull T entity) {
+    public Mono<? extends T> update(@NonNull T updatedEntity) {
         return null;
     }
 
-    public Flux<? extends T> updateAll(@NonNull Iterable<T> entities) {
+    // Count of updated entities
+    public Flux<? extends T> updateAll(@NonNull Iterable<T> updatedEntities) {
         return null;
     }
 
-    public Flux<? extends T> saveAll(@NonNull Iterable<T> entities) {
+    public Flux<ID> saveAll(@NonNull Iterable<T> entities) {
         return null;
     }
 
@@ -119,8 +78,6 @@ public abstract class AsyncCrudRepository<T extends Identifiable<ID>, ID> {
             });
         } catch (Exception ex) {
             return Mono.error(ex);
-        } finally {
-
         }
     }
 
@@ -132,6 +89,7 @@ public abstract class AsyncCrudRepository<T extends Identifiable<ID>, ID> {
         try {
             var ps = dbContext.getPreparedStatementIterable(repositoryQueriesContainer.getFindAll(), ids);
             var rs = ps.executeQuery();
+
             return Flux.create(c -> {
                 try {
                     var hasRecords = rs.next();
@@ -171,6 +129,51 @@ public abstract class AsyncCrudRepository<T extends Identifiable<ID>, ID> {
         return null;
     }
 
+    private void configureQueryBinder() {
+        var binders = this.getClass().getAnnotationsByType(QueryBinder.class);
+        if (binders == null || binders.length <= 0) {
+            throw new RuntimeException("QueryBinder annotation with a valid 'file' property must be defined on any Repository class");
+        }
+
+        var f = binders[0].file();
+        if (StringUtils.isEmpty(f)) {
+            throw new RuntimeException("QueryBinder annotation: file property must be overwritten");
+        }
+
+        try {
+            String fileName = (f.toUpperCase(Locale.ROOT).endsWith(".YML") || f.toUpperCase(Locale.ROOT).endsWith(".YAML"))
+                    ? f : f + ".yml";
+            var url = this.getClass().getClassLoader().getResource(Path.of("db", "repository", fileName).toString());
+            if (url == null) {
+                throw new RuntimeException("QueryBinder annotation: " + fileName + "(.yml) or (.yaml) does not exist in resources/db/repository");
+            }
+            BufferedReader in = new BufferedReader(new InputStreamReader(url.openStream()));
+            repositoryQueriesContainer = new RepositoryQueriesContainer();
+            String nxt = null;
+            while (null != (nxt = in.readLine())) {
+                if (nxt.equalsIgnoreCase("CRUD:")) {
+                    queryBinderState = QueryBinderState.IN_CRUD;
+                }
+                else if (nxt.equalsIgnoreCase("STORED-PROCEDURES:")) {
+                    queryBinderState = QueryBinderState.IN_STORED_PROC;
+                } else if (nxt.endsWith(":")) {
+                    queryBinderState = QueryBinderState.WAIT;
+                } else {
+                    switch (queryBinderState) {
+                        case IN_CRUD:
+                            processCrud(nxt, repositoryQueriesContainer);
+                            break;
+                        case IN_STORED_PROC:
+                            processSp(nxt, repositoryQueriesContainer);
+                            break;
+                    }
+                }
+            }
+        } catch (Exception ex) {
+            throw new RuntimeException(ex);
+        }
+    }
+
     private void processCrud(String line, RepositoryQueriesContainer container) {
         var tokens = line.split(":");
         if (tokens != null && tokens.length == 2) {
@@ -188,6 +191,14 @@ public abstract class AsyncCrudRepository<T extends Identifiable<ID>, ID> {
                     break;
             }
         }
+    }
+
+    public <U> Flux<U> fetchResultMany(String storedProcName, Object... params) {
+        return null;
+    }
+
+    public <U> Mono<U> fetchResultOne(String storedProcName, Object... params) {
+        return null;
     }
 
     private void processSp(String line, RepositoryQueriesContainer container) {
