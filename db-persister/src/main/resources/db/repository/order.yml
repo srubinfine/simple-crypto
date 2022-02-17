@@ -1,7 +1,7 @@
 crud:
   findAll: select * from smplc.order where id
   findById: select * from smplc.order where id=?
-  count: select count(*) from smplc.order
+  count: select count(*) count from smplc.order
 stored-procs:
   - putNameOfYourStoredProc1
   - putNameOfYourStoredProc2
