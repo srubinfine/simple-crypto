@@ -82,7 +82,25 @@ public abstract class AsyncRepository<T extends Identifiable<ID>, ID> {
     }
 
     public Mono<Boolean> existsById(@NonNull ID s) {
-       return null;
+        PreparedStatement ps;
+        try {
+            ps = dbContext.getPreparedStatement(repositoryQueriesContainer.getFindById(), s);
+            var rs = ps.executeQuery();
+            return Mono.create(c -> {
+                try {
+                    var hasRecords = rs.next();
+                    if (!hasRecords) {
+                        c.success(true);
+                    } else {
+                        c.success(false);
+                    }
+                } catch (Exception ex) {
+                    c.error(ex);
+                }
+            });
+        } catch (Exception ex) {
+            return Mono.error(ex);
+        }
     }
 
     public Flux<? extends T> findAll(@NonNull Iterable<ID> ids) {
@@ -114,7 +132,22 @@ public abstract class AsyncRepository<T extends Identifiable<ID>, ID> {
     }
 
     public Mono<Long> count() {
-        return null;
+        PreparedStatement ps;
+        try {
+            ps = dbContext.getPreparedStatement(repositoryQueriesContainer.getCount());
+            var rs = ps.executeQuery();
+            return Mono.create(c -> {
+                try {
+                    rs.next();
+                    final var count = rs.getLong("count");
+                    c.success(count);
+                } catch (Exception ex) {
+                    c.error(ex);
+                }
+            });
+        } catch (Exception ex) {
+            return Mono.error(ex);
+        }
     }
 
     public Mono<Long> deleteById(@NonNull ID s) {
