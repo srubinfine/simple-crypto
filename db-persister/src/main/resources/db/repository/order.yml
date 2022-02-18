@@ -2,6 +2,8 @@ crud:
   findAll: select * from smplc.order where id
   findById: select * from smplc.order where id=?
   count: select count(*) count from smplc.order
+  save: insert into smplc.order (id, symbol, price, shares, side) values(?,?,?,?,?)
+
 stored-procs:
   - putNameOfYourStoredProc1
   - putNameOfYourStoredProc2

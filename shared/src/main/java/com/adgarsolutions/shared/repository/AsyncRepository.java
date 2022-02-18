@@ -42,7 +42,14 @@ public abstract class AsyncRepository<T extends Identifiable<ID>, ID> {
     protected abstract T getNextItemFromRecordSet(final ResultSet rs) throws SQLException;
 
     public Mono<ID> save(@NonNull T entity) {
-        return null;
+        PreparedStatement ps;
+        try {
+            ps = dbContext.getPreparedStatement(repositoryQueriesContainer.getSave(), entity.getFieldMappings().values().toArray());
+            var rs = ps.executeUpdate();
+            return (rs == 1) ? Mono.just(entity.getId()) : Mono.error(new RuntimeException("SQL update failed"));
+        } catch (Exception ex) {
+            return Mono.error(ex);
+        }
     }
 
     public Mono<? extends T> update(@NonNull T updatedEntity) {
@@ -219,6 +226,9 @@ public abstract class AsyncRepository<T extends Identifiable<ID>, ID> {
                     break;
                 case "COUNT":
                     container.setCount(tokens[1].trim());
+                    break;
+                case "SAVE":
+                    container.setSave(tokens[1].trim());
                     break;
                 default:
                     break;
