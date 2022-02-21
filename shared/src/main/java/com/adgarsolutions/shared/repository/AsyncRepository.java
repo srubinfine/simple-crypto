@@ -15,7 +15,10 @@ import java.nio.file.Path;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 
 public abstract class AsyncRepository<T extends Identifiable<ID>, ID> {
 
@@ -52,16 +55,20 @@ public abstract class AsyncRepository<T extends Identifiable<ID>, ID> {
         }
     }
 
+    public Flux<ID> saveAll(@NonNull Iterable<T> entities) {
+        List<T> ret = new Arraylist<T>();
+        for (T entity : entities) {
+            //Mono<ID> res = save(entity).onErrorReturn();
+            //https://www.baeldung.com/java-mono-list-to-flux
+        }
+    }
+
     public Mono<? extends T> update(@NonNull T updatedEntity) {
         return null;
     }
 
     // Count of updated entities
     public Flux<? extends T> updateAll(@NonNull Iterable<T> updatedEntities) {
-        return null;
-    }
-
-    public Flux<ID> saveAll(@NonNull Iterable<T> entities) {
         return null;
     }
 
