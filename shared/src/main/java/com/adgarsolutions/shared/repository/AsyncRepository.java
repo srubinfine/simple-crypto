@@ -15,7 +15,11 @@ import java.nio.file.Path;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.List;
 import java.util.Locale;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 public abstract class AsyncRepository<T extends Identifiable<ID>, ID> {
 
@@ -157,16 +161,55 @@ public abstract class AsyncRepository<T extends Identifiable<ID>, ID> {
         }
     }
 
-    public Mono<Long> deleteById(@NonNull ID s) {
-        return null;
+    public Mono<Integer> deleteById(@NonNull ID id) {
+        try {
+            var ps = dbContext.getPreparedStatement(repositoryQueriesContainer.getDelete(), id);
+            return Mono.create(c -> {
+                try {
+                    final var count = ps.executeUpdate();
+                    c.success(count);
+                } catch (Exception ex) {
+                    c.error(ex);
+                }
+            });
+        } catch (Exception ex) {
+            return Mono.error(ex);
+        }
     }
 
-    public Mono<Boolean> delete(@NonNull ID entity) {
-        return null;
+    public Mono<Long> deleteMany(@NonNull List<ID> ids) {
+        int batchSize = 20;
+
+        var batchedIds = partitionIntoBatches(batchSize, ids);
+
+        AtomicInteger totalCount = new AtomicInteger();
+
+        for(var idBatch : batchedIds ) {
+
+            try {
+                final var ps = dbContext.getPreparedStatementIterable(repositoryQueriesContainer.getDeleteMany(), idBatch);
+
+                try {
+                    final var count = ps.executeUpdate();
+                    totalCount.addAndGet(count);
+
+                } catch (Exception ex) {
+                    return Mono.create(c -> c.error(ex));
+                }
+
+            } catch (Exception ex) {
+                return Mono.error(ex);
+            }
+        }
+
+        return Mono.create(c -> c.success(totalCount.longValue()));
     }
 
-    public Mono<Long> deleteAll(@NonNull Iterable<ID> entities) {
-        return null;
+    private List<List<ID>> partitionIntoBatches(int batchSize, List<ID> ids) {
+        return IntStream.range(0, ids.size())
+                .filter(i -> i % batchSize == 0)
+                .mapToObj(i -> ids.subList(i, Math.min(i + batchSize, ids.size() )))
+                .collect(Collectors.toList());
     }
 
     private void configureQueryBinder() {
@@ -226,6 +269,12 @@ public abstract class AsyncRepository<T extends Identifiable<ID>, ID> {
                     break;
                 case "COUNT":
                     container.setCount(tokens[1].trim());
+                    break;
+                case "DELETE":
+                    container.setDelete(tokens[1].trim());
+                    break;
+                case "DELETEMANY":
+                    container.setDeleteMany(tokens[1].trim());
                     break;
                 case "SAVE":
                     container.setSave(tokens[1].trim());
