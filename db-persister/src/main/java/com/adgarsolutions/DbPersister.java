@@ -26,21 +26,40 @@ public class DbPersister {
     @EventListener
     public void onStartup(BeanContextEvent beanContextEvent) {
         if (beanContextEvent instanceof StartupEvent) {
-/*
-            this.asyncOrderRepository.findAll(Arrays.asList("abc", "rmd")).subscribe(
-                    ord -> System.out.println(ord.toString()),
-                    err -> System.err.println(err.toString()),
-                    () -> System.out.println("DONE RETRIEVING ORDERS BY IDS"));
 
-            this.asyncOrderRepository.findById("abc").subscribe(
-                    ord -> System.out.println(ord.toString()),
-                    err -> System.err.println(err.toString()),
-                    () -> System.out.println("DONE RETRIEVING ORDER BY ID"));
-*/
-            this.asyncOrderRepository.save(new Order(UUID.randomUUID().toString(), "AAPL", BigDecimal.valueOf(125.4), BigDecimal.valueOf(25.3), "Buy")).subscribe(
-                    id -> System.out.println(id),
+           final var id1 = UUID.randomUUID().toString();
+           final var id2 = UUID.randomUUID().toString();
+           final var id3 = UUID.randomUUID().toString();
+
+            this.asyncOrderRepository.save(new Order(id1, "AAPL", BigDecimal.valueOf(125.4), BigDecimal.valueOf(25.3), "Buy")).subscribe(
+                    System.out::println,
                     err -> System.err.println(err.toString()),
                     () -> System.out.println("DONE SAVING ORDER"));
+
+            this.asyncOrderRepository.save(new Order(id2, "abc", BigDecimal.valueOf(125.4), BigDecimal.valueOf(25.3), "Buy")).subscribe(
+                    System.out::println,
+                    err -> System.err.println(err.toString()),
+                    () -> System.out.println("DONE SAVING ORDER"));
+
+            this.asyncOrderRepository.save(new Order(id3, "rmd", BigDecimal.valueOf(125.4), BigDecimal.valueOf(25.3), "Buy")).subscribe(
+                    System.out::println,
+                    err -> System.err.println(err.toString()),
+                    () -> System.out.println("DONE SAVING ORDER"));
+
+//            this.asyncOrderRepository.findAll(Arrays.asList("abc", "rmd")).subscribe(
+//                    ord -> System.out.println(ord.toString()),
+//                    err -> System.err.println(err.toString()),
+//                    () -> System.out.println("DONE RETRIEVING ORDERS BY IDS"));
+//
+//            this.asyncOrderRepository.findById("abc").subscribe(
+//                    ord -> System.out.println(ord.toString()),
+//                    err -> System.err.println(err.toString()),
+//                    () -> System.out.println("DONE RETRIEVING ORDER BY ID"));
+
+            this.asyncOrderRepository.deleteMany(Arrays.asList(id2, id3)).subscribe(
+                    ord -> System.out.println(ord.toString()),
+                    err -> System.err.println(err.toString()),
+                    () -> System.out.println("Done deleting orders by ID"));
         }
     }
 }
