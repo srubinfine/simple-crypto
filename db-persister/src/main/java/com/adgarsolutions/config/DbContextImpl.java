@@ -65,10 +65,10 @@ public class DbContextImpl implements DbContext {
     @Override
     public <T> PreparedStatement getPreparedStatementIterable(String query, Iterable<T> iter) throws SQLException {
         // Step 1. Get next connection (round robin)
-        var join = String.join(",", StreamSupport.stream(iter.spliterator(), false)
+        var join = StreamSupport.stream(iter.spliterator(), false)
                 .map(v -> "?")
-                .collect(Collectors.toList()));
-        var stmt = String.format("select * from smplc.order where id in (%s)", join);
+                .collect(Collectors.joining(","));
+        var stmt = String.format(query, join);
         PreparedStatement ps = getNextConnection().prepareStatement(stmt);
         var idx = 1;
         for (T p : iter) {
