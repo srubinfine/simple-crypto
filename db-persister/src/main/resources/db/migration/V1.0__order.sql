@@ -6,4 +6,6 @@ CREATE TABLE smplc.order (
     ,side VARCHAR(32)
     ,price NUMERIC(40,8)
     ,shares NUMERIC(40,8)
+    ,is_deleted BOOLEAN DEFAULT FALSE
+    ,updated_time TIMESTAMP DEFAULT (current_timestamp at time zone 'UTC')
 );

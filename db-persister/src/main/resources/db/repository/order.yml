@@ -1,8 +1,10 @@
 crud:
   findAll: select * from smplc.order where id
-  findById: select * from smplc.order where id=?
-  count: select count(*) count from smplc.order
-  save: insert into smplc.order (id, symbol, price, shares, side) values(?,?,?,?,?)
+  findById: select * from smplc.order where is_deleted = false and id=?
+  count: select count(*) count from smplc.order where is_deleted = false
+  delete: update smplc.order set is_deleted = true where is_deleted = false and id=?
+  deleteMany: update smplc.order set is_deleted = true, updated_time = current_timestamp at time zone 'UTC' where is_deleted = false and id in (%s)
+  save: insert into smplc.order (id, symbol, price, shares, side, is_deleted) values(?,?,?,?,?,?)
 
 stored-procs:
   - putNameOfYourStoredProc1

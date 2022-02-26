@@ -14,6 +14,8 @@ public class RepositoryQueriesContainer {
     private String findAll;
     private String findById;
     private String count;
+    private String delete;
+    private String deleteMany;
     private String save;
     private List<String> storedProcs = new ArrayList<>();
 }
